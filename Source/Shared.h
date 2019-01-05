@@ -2,29 +2,20 @@
 
 #include <simd/simd.h>
 
-#ifdef SHADER
-    #define CC constant
-    typedef simd::float3 simd_float3;
-    typedef simd::float4 simd_float4;
-    typedef metal::uchar u_char;
-#else
-    #define CC
-#endif
-
 typedef struct {
-	simd_float3 pos;
-	simd_float3 nrm;
-	simd_float4 texColor;    // alpha = 0 == texture coord,  else color
+	vector_float3 pos;
+	vector_float3 nrm;
+	vector_float4 texColor;    // alpha = 0 == texture coord,  else color
 	
 	float flux;
-	u_char inside;
+	unsigned char inside;
 	
 	int unused1;
 	int unused2;
 } TVertex;
 
 typedef struct {
-    simd_float3 pos;
+    vector_float3 pos;
     float power;
     
     int unused1;
@@ -38,8 +29,16 @@ typedef struct {
     float movement2;
     int index;
     int lookup;
+    int drawStyle;
+
+    vector_float3 base; // for calcGridPositions shader
+    vector_float2 rot;
 } ConstantData;
 
+typedef struct {
+    int count;
+} Counter;
+
 #define BCOUNT 12 // #flux points
-#define GSPAN  10 // #marching cubes x,y,z
+#define GSPAN  30 // #marching cubes x,y,z
 

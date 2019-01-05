@@ -26,7 +26,7 @@ var constantsIndex: Int = 0
 
 func alterTranslationAmount(_ amt:Float) {
     translationAmount += amt
-    if translationAmount < 2 { translationAmount = 2 } else if translationAmount > 80 { translationAmount = 80 }
+    if translationAmount < 2 { translationAmount = 2 } else if translationAmount > 180 { translationAmount = 180 }
 }
 
 func changeIsoValue(_ amt:Float) {
@@ -102,8 +102,8 @@ class Renderer: NSObject, VCDelegate, VDelegate {
     
     func preparePipelineState(_ view: AAPLView) {
         guard let _defaultLibrary = gDevice!.makeDefaultLibrary() else {  NSLog(">> ERROR: Couldnt create a default shader library"); fatalError() }
-        guard let vertexProgram = _defaultLibrary.makeFunction(name: "lighting_vertex") else {  NSLog("V shader load"); fatalError() }
-        guard let fragmentProgram = _defaultLibrary.makeFunction(name: "textureFragment") else {  NSLog("F shader load"); fatalError() }
+        guard let vertexProgram = _defaultLibrary.makeFunction(name: "texturedVertexShader") else {  NSLog("V shader load"); fatalError() }
+        guard let fragmentProgram = _defaultLibrary.makeFunction(name: "fragmentShader") else {  NSLog("F shader load"); fatalError() }
         
         let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
         pipelineStateDescriptor.label  = "MyPipeline"
@@ -167,13 +167,6 @@ class Renderer: NSObject, VCDelegate, VDelegate {
         lAngle += 0.03
         constant_buffer[0].light = lightpos
     
-        if drawStyle == .line {
-            constant_buffer[0].color = float4(1,1,0,1)
-        }
-        else {
-            constant_buffer[0].color = float4(0,0,0,0)
-        }
-
         renderEncoder?.setVertexBuffer(constants[constantsIndex], offset:0, index: 1)
         // -----------------------------
 
@@ -196,7 +189,7 @@ class Renderer: NSObject, VCDelegate, VDelegate {
     func reshape(_ view: AAPLView) {
         let kFOVY: Float = 65.0
         let aspect = Float(abs(view.bounds.size.width / view.bounds.size.height))
-        _projectionMatrix = perspective_fov(kFOVY, aspect, 0.1, 100.0)
+        _projectionMatrix = perspective_fov(kFOVY, aspect, 0.1, 1500.0)
         
         arcBall.initialize(Float(view.bounds.size.width),Float(view.bounds.size.height))
     }

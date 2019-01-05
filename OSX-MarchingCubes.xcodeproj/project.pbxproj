@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1D68194C1F7A052800A4DD45 /* World.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D68194B1F7A052800A4DD45 /* World.swift */; };
-		1D806FE31F74C5FB003398EB /* CubeTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D806FE21F74C5FB003398EB /* CubeTables.swift */; };
 		1D806FED1F785D45003398EB /* ComputeShader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D806FEC1F785D45003398EB /* ComputeShader.swift */; };
 		1D84127F1F6EB66500CCDF07 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D84127E1F6EB66500CCDF07 /* Background.swift */; };
 		1D8412881F702B2000CCDF07 /* Cube.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8412871F702B2000CCDF07 /* Cube.swift */; };
@@ -25,7 +24,6 @@
 
 /* Begin PBXFileReference section */
 		1D68194B1F7A052800A4DD45 /* World.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = World.swift; sourceTree = "<group>"; };
-		1D806FE21F74C5FB003398EB /* CubeTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubeTables.swift; sourceTree = "<group>"; };
 		1D806FEC1F785D45003398EB /* ComputeShader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputeShader.swift; sourceTree = "<group>"; };
 		1D84127E1F6EB66500CCDF07 /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		1D8412871F702B2000CCDF07 /* Cube.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cube.swift; sourceTree = "<group>"; };
@@ -78,13 +76,12 @@
 				623F27DB19340FA2000FA88C /* shaders.metal */,
 				1D68194B1F7A052800A4DD45 /* World.swift */,
 				1D8412871F702B2000CCDF07 /* Cube.swift */,
+				1D806FEC1F785D45003398EB /* ComputeShader.swift */,
 				60D4103A1F7B50AA00A7847B /* Shared.h */,
 				D7BF7C5C1BF73BD700414589 /* ViewController.swift */,
 				3A2179331BCC65370073FB40 /* Main.storyboard */,
 				D7BF7C5E1BF73DAA00414589 /* AAPLRenderer.swift */,
 				1D8412891F70982400CCDF07 /* ArcBall.swift */,
-				1D806FE21F74C5FB003398EB /* CubeTables.swift */,
-				1D806FEC1F785D45003398EB /* ComputeShader.swift */,
 				D7BF7C571BF6EB0B00414589 /* AAPLView.swift */,
 				1D84127E1F6EB66500CCDF07 /* Background.swift */,
 				D7BF7C691BF7603D00414589 /* AppDelegate.swift */,
@@ -182,7 +179,6 @@
 				D7BF7C5F1BF73DAA00414589 /* AAPLRenderer.swift in Sources */,
 				D7BF7C6B1BF7604200414589 /* AppDelegate.swift in Sources */,
 				D7BF7C521BF6D7A800414589 /* AAPLTransforms.swift in Sources */,
-				1D806FE31F74C5FB003398EB /* CubeTables.swift in Sources */,
 				D7BF7C5D1BF73BD700414589 /* ViewController.swift in Sources */,
 				1D84127F1F6EB66500CCDF07 /* Background.swift in Sources */,
 				1D8412881F702B2000CCDF07 /* Cube.swift in Sources */,
