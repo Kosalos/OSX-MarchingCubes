@@ -12,13 +12,11 @@
 		1D84127F1F6EB66500CCDF07 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D84127E1F6EB66500CCDF07 /* Background.swift */; };
 		1D8412881F702B2000CCDF07 /* Cube.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8412871F702B2000CCDF07 /* Cube.swift */; };
 		1D84128A1F70982400CCDF07 /* ArcBall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8412891F70982400CCDF07 /* ArcBall.swift */; };
+		1DBB21FC21E13A3A00D50F82 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBB21FB21E13A3A00D50F82 /* Renderer.swift */; };
+		1DBB21FE21E14F9F00D50F82 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1DBB21FD21E14F9F00D50F82 /* Main.storyboard */; };
 		3A21792F1BCC63F90073FB40 /* shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 623F27DB19340FA2000FA88C /* shaders.metal */; };
-		3A2179351BCC65370073FB40 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3A2179331BCC65370073FB40 /* Main.storyboard */; };
 		3A2179371BCC653D0073FB40 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A2179361BCC653D0073FB40 /* Assets.xcassets */; };
-		D7BF7C521BF6D7A800414589 /* AAPLTransforms.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BF7C511BF6D7A800414589 /* AAPLTransforms.swift */; };
-		D7BF7C581BF6EB0B00414589 /* AAPLView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BF7C571BF6EB0B00414589 /* AAPLView.swift */; };
 		D7BF7C5D1BF73BD700414589 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BF7C5C1BF73BD700414589 /* ViewController.swift */; };
-		D7BF7C5F1BF73DAA00414589 /* AAPLRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BF7C5E1BF73DAA00414589 /* AAPLRenderer.swift */; };
 		D7BF7C6B1BF7604200414589 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BF7C691BF7603D00414589 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -28,18 +26,16 @@
 		1D84127E1F6EB66500CCDF07 /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		1D8412871F702B2000CCDF07 /* Cube.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cube.swift; sourceTree = "<group>"; };
 		1D8412891F70982400CCDF07 /* ArcBall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcBall.swift; sourceTree = "<group>"; };
+		1DBB21FB21E13A3A00D50F82 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		1DBB21FD21E14F9F00D50F82 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		3A2179321BCC65310073FB40 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3A2179341BCC65370073FB40 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = OSX/Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3A2179361BCC653D0073FB40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3A5913251BCC43E900890143 /* OSX-MarchingCubes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "OSX-MarchingCubes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		60D4103A1F7B50AA00A7847B /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
 		623F27DB19340FA2000FA88C /* shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = shaders.metal; sourceTree = "<group>"; };
 		626C61081932F259007A3E00 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		626C610A1932F25E007A3E00 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		D7BF7C511BF6D7A800414589 /* AAPLTransforms.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLTransforms.swift; sourceTree = "<group>"; };
-		D7BF7C571BF6EB0B00414589 /* AAPLView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLView.swift; sourceTree = "<group>"; };
 		D7BF7C5C1BF73BD700414589 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		D7BF7C5E1BF73DAA00414589 /* AAPLRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AAPLRenderer.swift; sourceTree = "<group>"; };
 		D7BF7C691BF7603D00414589 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,13 +75,11 @@
 				1D806FEC1F785D45003398EB /* ComputeShader.swift */,
 				60D4103A1F7B50AA00A7847B /* Shared.h */,
 				D7BF7C5C1BF73BD700414589 /* ViewController.swift */,
-				3A2179331BCC65370073FB40 /* Main.storyboard */,
-				D7BF7C5E1BF73DAA00414589 /* AAPLRenderer.swift */,
+				1DBB21FB21E13A3A00D50F82 /* Renderer.swift */,
 				1D8412891F70982400CCDF07 /* ArcBall.swift */,
-				D7BF7C571BF6EB0B00414589 /* AAPLView.swift */,
 				1D84127E1F6EB66500CCDF07 /* Background.swift */,
+				1DBB21FD21E14F9F00D50F82 /* Main.storyboard */,
 				D7BF7C691BF7603D00414589 /* AppDelegate.swift */,
-				D7BF7C511BF6D7A800414589 /* AAPLTransforms.swift */,
 				3A2179361BCC653D0073FB40 /* Assets.xcassets */,
 				3A2179321BCC65310073FB40 /* Info.plist */,
 				626C610C1932F266007A3E00 /* Frameworks */,
@@ -106,9 +100,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3A5913241BCC43E900890143 /* OSX-MarchingCubes-OSX */ = {
+		3A5913241BCC43E900890143 /* OSX-MarchingCubes */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3A5913361BCC43E900890143 /* Build configuration list for PBXNativeTarget "OSX-MarchingCubes-OSX" */;
+			buildConfigurationList = 3A5913361BCC43E900890143 /* Build configuration list for PBXNativeTarget "OSX-MarchingCubes" */;
 			buildPhases = (
 				3A5913211BCC43E900890143 /* Sources */,
 				3A5913221BCC43E900890143 /* Frameworks */,
@@ -118,7 +112,7 @@
 			);
 			dependencies = (
 			);
-			name = "OSX-MarchingCubes-OSX";
+			name = "OSX-MarchingCubes";
 			productName = "MetalBasic3D-OSX";
 			productReference = 3A5913251BCC43E900890143 /* OSX-MarchingCubes.app */;
 			productType = "com.apple.product-type.application";
@@ -151,7 +145,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3A5913241BCC43E900890143 /* OSX-MarchingCubes-OSX */,
+				3A5913241BCC43E900890143 /* OSX-MarchingCubes */,
 			);
 		};
 /* End PBXProject section */
@@ -162,7 +156,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A2179371BCC653D0073FB40 /* Assets.xcassets in Resources */,
-				3A2179351BCC65370073FB40 /* Main.storyboard in Resources */,
+				1DBB21FE21E14F9F00D50F82 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -176,29 +170,16 @@
 				1D84128A1F70982400CCDF07 /* ArcBall.swift in Sources */,
 				1D806FED1F785D45003398EB /* ComputeShader.swift in Sources */,
 				3A21792F1BCC63F90073FB40 /* shaders.metal in Sources */,
-				D7BF7C5F1BF73DAA00414589 /* AAPLRenderer.swift in Sources */,
 				D7BF7C6B1BF7604200414589 /* AppDelegate.swift in Sources */,
-				D7BF7C521BF6D7A800414589 /* AAPLTransforms.swift in Sources */,
 				D7BF7C5D1BF73BD700414589 /* ViewController.swift in Sources */,
 				1D84127F1F6EB66500CCDF07 /* Background.swift in Sources */,
 				1D8412881F702B2000CCDF07 /* Cube.swift in Sources */,
+				1DBB21FC21E13A3A00D50F82 /* Renderer.swift in Sources */,
 				1D68194C1F7A052800A4DD45 /* World.swift in Sources */,
-				D7BF7C581BF6EB0B00414589 /* AAPLView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		3A2179331BCC65370073FB40 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				3A2179341BCC65370073FB40 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		3A5913371BCC43E900890143 /* Debug */ = {
@@ -217,7 +198,7 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Harry.OSX-MarchingCubes";
 				PRODUCT_NAME = "OSX-MarchingCubes";
 				SDKROOT = macosx;
@@ -240,7 +221,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = TARGET_OSX;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Harry.OSX-MarchingCubes";
 				PRODUCT_NAME = "OSX-MarchingCubes";
@@ -296,7 +277,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -344,7 +325,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -356,7 +337,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3A5913361BCC43E900890143 /* Build configuration list for PBXNativeTarget "OSX-MarchingCubes-OSX" */ = {
+		3A5913361BCC43E900890143 /* Build configuration list for PBXNativeTarget "OSX-MarchingCubes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3A5913371BCC43E900890143 /* Debug */,

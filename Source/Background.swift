@@ -1,9 +1,9 @@
 import Cocoa
 
 class Background: NSView {
-    
-    @IBOutlet var instructions: NSTextField!
-    
+    override var isFlipped: Bool { return true }
+    override var acceptsFirstResponder: Bool { return true }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
@@ -15,11 +15,17 @@ class Background: NSView {
         context?.drawPath(using:.fill)
     }
     
-    override func viewDidMoveToWindow() {
-        instructions!.stringValue =
-        "1,2, scrollWheel+RMB :  Change flux level\n" +
-        "Arrows, Left Mouse : Rotate\n" +
-        "PgUp, PgDn, scrollWheel : Distance\n" +
-        "V: Draw Style"
+    override func keyDown(with event: NSEvent) {
+        super.keyDown(with: event)
+        
+        if event.keyCode == 53 { NSApplication.shared.terminate(self) } // esc key
+        
+        let keyCode = event.charactersIgnoringModifiers!.uppercased()
+        switch keyCode {
+        case "1" : vc.changeIsoValue(-0.001)
+        case "2" : vc.changeIsoValue(+0.001)
+        case "V" : control.drawStyle = Int32(1 - control.drawStyle)
+        default : break
+        }
     }
 }

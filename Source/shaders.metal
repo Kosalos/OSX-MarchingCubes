@@ -3,45 +3,36 @@
 
 using namespace metal;
 
-struct Constants_t
-{
-    simd::float4x4 mvp;
-    simd::float3 light;
-    simd::float4 color;
-} __attribute__ ((aligned (256)));
-
-struct ColorInOut {
+struct Transfer {
     float4 position [[position]];
     float pointsize [[point_size]];
     float4 texColor;
     float4 lighting;
 };
 
-vertex ColorInOut texturedVertexShader
+vertex Transfer texturedVertexShader
 (
- device TVertex* vertex_array    [[ buffer(0) ]],
- constant Constants_t& constants [[ buffer(1) ]],
+ device TVertex* vData      [[ buffer(0) ]],
+ constant Uniforms &uniforms[[ buffer(1) ]],
  unsigned int vid [[ vertex_id ]]
  )
 {
-    ColorInOut out;
+    Transfer out;
+    TVertex v = vData[vid];
     
-    out.pointsize = 12.0;
-    out.texColor = vertex_array[vid].texColor;
+    out.pointsize = 10.0;
+    out.position = uniforms.mvp * float4(v.pos, 1.0);
+    out.texColor = v.texColor;
     
-    float4 in_position = float4(vertex_array[vid].pos, 1.0);
-    out.position = constants.mvp * in_position;
-    
-    float3 nrm = vertex_array[vid].nrm;
-    float intensity = 1 + dot(nrm.rgb, normalize(constants.light));
-    out.lighting = float4(intensity,intensity,intensity,1);
+    float intensity = saturate(dot(vData[vid].nrm.rgb, uniforms.light));
+    out.lighting = 0.5 + float4(intensity,intensity,intensity,1);
     
     return out;
 }
 
-fragment float4 fragmentShader
+fragment float4 texturedFragmentShader
 (
- ColorInOut data [[stage_in]],
+ Transfer data [[stage_in]],
  texture2d<float> tex2D [[texture(0)]],
  sampler sampler2D [[sampler(0)]]
  )
@@ -60,15 +51,15 @@ fragment float4 fragmentShader
 
 kernel void calcBallMovement
 (
- device BallData *ballData     [[ buffer(0) ]],
- const device ConstantData *cd [[ buffer(1) ]],
+ device BallData *ballData [[ buffer(0) ]],
+ const device Control *cd  [[ buffer(1) ]],
  uint id [[ thread_position_in_grid ]]
  )
 {
     if(id >= BCOUNT) return; // size not evenly divisible by threads
     
     float fi = float(id);
-    float f1 = float(id+12);
+    float f1 = float(id+3);
     
     ballData[id].pos.x = cos(cd->movement  * (fi + 1)  ) * 1.9 * f1/2;
     ballData[id].pos.y = sin(cd->movement  * (fi + 1.2)) * 2.1 * f1/2;
@@ -84,10 +75,10 @@ constant int GSPAN2 = GSPAN * GSPAN;    //   Z axis offset
 constant int GSPAN3 = GSPAN + GSPAN2;   // Y+Z axis offset
 constant int GTOTAL = GSPAN * GSPAN * GSPAN;
 
-kernel void calcGridPositions
+kernel void updateMarchingCubes
 (
- device TVertex *grid           [[ buffer(0) ]],
- const device ConstantData &cd  [[ buffer(1) ]],
+ device TVertex *grid      [[ buffer(0) ]],
+ const device Control &cd  [[ buffer(1) ]],
  uint3 id [[ thread_position_in_grid ]]
  )
 {
@@ -123,7 +114,7 @@ kernel void calcGridPower
 (
  device TVertex *grid            [[ buffer(0) ]],
  const device BallData *ballData [[ buffer(1) ]],
- const device ConstantData &cd   [[ buffer(2) ]],
+ const device Control &cd   [[ buffer(2) ]],
  uint3 id [[ thread_position_in_grid ]]
  )
 {
@@ -194,7 +185,7 @@ kernel void calcGridPower3
  constant TVertex *grid         [[ buffer(0) ]],
  device TVertex *vertices       [[ buffer(1) ]],
  device atomic_uint &vcounter   [[ buffer(2) ]],
- const device ConstantData &cd  [[ buffer(3) ]],
+ const device Control &cd  [[ buffer(3) ]],
  uint3 id [[ thread_position_in_grid ]]
  )
 {

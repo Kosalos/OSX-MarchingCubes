@@ -9,9 +9,6 @@ typedef struct {
 	
 	float flux;
 	unsigned char inside;
-	
-	int unused1;
-	int unused2;
 } TVertex;
 
 typedef struct {
@@ -31,9 +28,15 @@ typedef struct {
     int lookup;
     int drawStyle;
 
-    vector_float3 base; // for calcGridPositions shader
+    vector_float3 base; // for updateMarchingCubes shader
     vector_float2 rot;
-} ConstantData;
+} Control;
+
+typedef struct {
+    matrix_float4x4 mvp;
+    float pointSize;
+    vector_float3 light;
+} Uniforms;
 
 typedef struct {
     int count;

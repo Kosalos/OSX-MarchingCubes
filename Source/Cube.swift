@@ -3,8 +3,6 @@ import Metal
 import simd
 
 let iGSPAN = Int(GSPAN)
-let GSPAN2:Int = iGSPAN * iGSPAN
-let GSPAN3:Int = iGSPAN + GSPAN2
 let GTOTAL:Int = iGSPAN * iGSPAN * iGSPAN
 let GTMAX:Int = GTOTAL*10
 
@@ -36,12 +34,9 @@ class Cube {
     //MARK: -
 
     func update() {
-        if vBuffer == nil {  vBuffer = gDevice?.makeBuffer(length:MemoryLayout<TVertex>.stride * GTMAX, options:.storageModeShared) }
+        if vBuffer == nil { vBuffer = device?.makeBuffer(length:MemoryLayout<TVertex>.stride * GTMAX, options:.storageModeShared) }
             
-        computeShader.calcGridPositions(&grid,base,rot)
-        computeShader.processGridPower(&grid)
-        computeShader.processGridPower2(&grid)
-        computeShader.processGridPower3(grid,vBuffer)
+        computeShader.updateMarchingCubes(&grid,base,rot)
     }
     
     //MARK: -
@@ -98,7 +93,7 @@ class Cube {
         addLine((p5+p6)/2,(p7+p8)/2)
         addLine((p6+p7)/2,(p8+p5)/2)
 
-        let cageBuffer:MTLBuffer! = gDevice?.makeBuffer(bytes: cageData, length:cageData.count * MemoryLayout<TVertex>.stride, options: MTLResourceOptions())
+        let cageBuffer:MTLBuffer! = device?.makeBuffer(bytes: cageData, length:cageData.count * MemoryLayout<TVertex>.stride, options: MTLResourceOptions())
         renderEncoder.setVertexBuffer(cageBuffer, offset: 0, index: 0)
         renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount:cageData.count)
     }
@@ -111,7 +106,7 @@ class Cube {
         if vCount > 0 {
             renderEncoder.setVertexBuffer(vBuffer, offset: 0, index: 0)
         
-            switch cData.drawStyle {
+            switch control.drawStyle {
             case 1  : renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount:vCount)
             default : renderEncoder.drawPrimitives(type: .line,     vertexStart: 0, vertexCount:vCount)
             }

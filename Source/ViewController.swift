@@ -1,127 +1,194 @@
-import AppKit
+import Cocoa
+import MetalKit
 
-@objc(VCDelegate)
-protocol VCDelegate: NSObjectProtocol {
-    func update(_ controller: ViewController)
-    func viewController(_ viewController: ViewController, willPause pause: Bool)
-}
+var device: MTLDevice! = nil
+var vc:ViewController! = nil
+var camera:float3 = float3(0,0,-50)
+var world:World! = nil
 
-@objc(ViewController)
-class ViewController: NSViewController {
-    
+class ViewController: NSViewController, NSWindowDelegate {
+    @IBOutlet var mtkViewL: MTKView!
+    @IBOutlet var mtkViewR: MTKView!
     @IBOutlet var instructions: NSTextField!
-    
-    weak var delegate: VCDelegate?
-    private(set) var timeSinceLastDraw: TimeInterval = 0.0
-    
-    var interval: Int = 0
-    var _displayLink: CVDisplayLink?
-    var _displaySource: DispatchSourceUserDataAdd?
-    private var _firstDrawOccurred: Bool = false
-    private var _timeSinceLastDrawPreviousTime: CFTimeInterval = 0.0
-    private var _gameLoopPaused: Bool = false
-    private var _renderer: Renderer!
-    
-    deinit {
-        if _displayLink != nil {
-            self.stopGameLoop()
-        }
-    }
-    
-    private let dispatchGameLoop: CVDisplayLinkOutputCallback = {
-        displayLink, now, outputTime, flagsIn, flagsOut, displayLinkContext in
-        
-        let source = Unmanaged<DispatchSourceUserDataAdd>.fromOpaque(displayLinkContext!).takeUnretainedValue()
-        source.add(data: 1)
-        return kCVReturnSuccess
-    }
-    
-    private func initCommon() {
-        _renderer = Renderer()
-        self.delegate = _renderer
-     
-        _displaySource = DispatchSource.makeUserDataAddSource(queue: DispatchQueue.main)
-        _displaySource!.setEventHandler {[weak self] in
-            self?.gameloop()
-        }
-        _displaySource!.resume()
-        
-        var cvReturn = CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink)
-        assert(cvReturn == kCVReturnSuccess)
-        
-        cvReturn = CVDisplayLinkSetOutputCallback(_displayLink!, dispatchGameLoop, Unmanaged.passUnretained(_displaySource!).toOpaque())
-        assert(cvReturn == kCVReturnSuccess)
-        
-        cvReturn = CVDisplayLinkSetCurrentCGDisplay(_displayLink!, CGMainDisplayID () )
-        assert(cvReturn == kCVReturnSuccess)
-        
-        interval = 1
-    }
-    
-    @objc func _windowWillClose(_ notification: Notification) {
-        if notification.object as AnyObject? === self.view.window {
-            CVDisplayLinkStop(_displayLink!)
-            _displaySource!.cancel()
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        self.initCommon()
-    }
-    
-    @IBOutlet weak var renderView: AAPLView!
-    
+    @IBOutlet var stereoButton: NSButton!
+    var isStereo:Bool = false
+    var paceRotate = CGPoint()
+
+    var rendererL: Renderer!
+    var rendererR: Renderer!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        renderView.delegate = _renderer
-        _renderer.configure(renderView)
-        CVDisplayLinkStart(_displayLink!)
+        vc = self
+        world = World()
+        device = MTLCreateSystemDefaultDevice()
+        mtkViewL.device = device
+        mtkViewR.device = device
+        
+        guard let newRenderer = Renderer(metalKitView: mtkViewL, 0) else { fatalError("Renderer cannot be initialized") }
+        rendererL = newRenderer
+        rendererL.mtkView(mtkViewL, drawableSizeWillChange: mtkViewL.drawableSize)
+        mtkViewL.delegate = rendererL
+        
+        guard let newRenderer2 = Renderer(metalKitView: mtkViewR, 1) else { fatalError("Renderer cannot be initialized") }
+        rendererR = newRenderer2
+        rendererR.mtkView(mtkViewR, drawableSizeWillChange: mtkViewR.drawableSize)
+        mtkViewR.delegate = rendererR
+        
+        instructions.stringValue =
+            "1,2 : Change flux level\n" +
+            "Left Mouse Button + Drag : Rotate\n" +
+            "Mouse ScrollWheel : Distance\n" +
+            "V: Draw Style"
     }
     
-    @objc func gameloop() {
-        delegate?.update(self)
-        renderView.display()
+    override func viewDidAppear() {
+        super.viewWillAppear()
+        
+        view.window?.delegate = self
+        resizeIfNecessary()
+        dvrCount = 1 // resize metalviews without delay
+        
+        layoutViews()
+        
+        Timer.scheduledTimer(withTimeInterval:0.01, repeats:true) { timer in self.paceTimerHandler() }
     }
+
+    @IBAction func stereoPressed(_ sender: NSButton) {
+        isStereo = !isStereo
+        layoutViews()
+    }
+
+    //MARK: -
+  
+    var viewCenter = CGPoint()
     
-    func stopGameLoop() {
-        if _displayLink != nil {
-            CVDisplayLinkStop(_displayLink!)
-            _displaySource!.cancel()
-            
-            _displayLink = nil
-            _displaySource = nil
+    func layoutViews() {
+        let xs = view.bounds.width
+        let ys = view.bounds.height - 80
+        
+        if isStereo {
+            mtkViewR.isHidden = false
+            let xs2:CGFloat = xs/2
+            mtkViewL.frame = CGRect(x:1, y:1, width:xs2, height:ys)
+            mtkViewR.frame = CGRect(x:xs2+2, y:1, width:xs2-3, height:ys)
         }
-    }
-    
-    var paused: Bool {
-        set(pause) {
-            if _gameLoopPaused == pause {
-                return
-            }
-            
-            if _displayLink != nil {
-                // inform the delegate we are about to pause
-                delegate?.viewController(self, willPause: pause)
-                
-                if pause {
-                    CVDisplayLinkStop(_displayLink!)
-                } else {
-                    CVDisplayLinkStart(_displayLink!)
-                }
-            }
+        else {
+            mtkViewR.isHidden = true
+            mtkViewL.frame = CGRect(x:1, y:1, width:xs-2, height:ys)
         }
         
-        get {
-            return _gameLoopPaused
+        instructions.frame = CGRect(x:10, y:ys+5, width:300, height:70)
+        stereoButton.frame = CGRect(x:320, y:ys+5, width:80, height:30)
+
+        viewCenter.x = mtkViewL.frame.width/2
+        viewCenter.y = mtkViewL.frame.height/2
+        arcBall.initialize(Float(mtkViewL.frame.width),Float(mtkViewL.frame.height))
+    }
+    
+    //MARK: -
+    
+    func resizeIfNecessary() {
+        let minWinSize:CGSize = CGSize(width:600, height:600)
+        var r:CGRect = (view.window?.frame)!
+        var changed:Bool = false
+        
+        if r.size.width < minWinSize.width {
+            r.size.width = minWinSize.width
+            changed = true
+        }
+        if r.size.height < minWinSize.height {
+            r.size.height = minWinSize.height
+            changed = true
+        }
+        
+        if changed { view.window?.setFrame(r, display: true) }
+        
+        layoutViews()
+    }
+    
+    func windowDidResize(_ notification: Notification) {
+        resizeIfNecessary()
+        resetDelayedViewResizing()
+    }
+    
+    //MARK: -
+    
+    @objc func paceTimerHandler() {
+        world.update(self)
+        rotate(paceRotate)
+        
+        if dvrCount > 0 {
+            dvrCount -= 1
+            if dvrCount <= 0 {
+                layoutViews()
+            }
         }
     }
     
-    @objc func didEnterBackground(_ notification: Notification) {
-        self.paused = true
+    //MARK: -
+    
+    var dvrCount:Int = 0
+    
+    // don't alter layout until they have finished resizing the window
+    func resetDelayedViewResizing() {
+        dvrCount = 10 // 20 = 1 second delay
     }
     
-    @objc func willEnterForeground(_ notification: Notification) {
-        self.paused = false
+    func rotate(_ pt:CGPoint) {
+        arcBall.mouseDown(viewCenter)
+        arcBall.mouseMove(CGPoint(x:viewCenter.x + pt.x, y:viewCenter.y + pt.y))
+    }
+    
+    //MARK: -
+
+    var pt = NSPoint()
+    
+    func flippedYCoord(_ pt:NSPoint) -> NSPoint {
+        var npt = pt
+        npt.y = view.bounds.size.height - pt.y
+        return npt
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        pt = flippedYCoord(event.locationInWindow)
+        paceRotate = CGPoint()
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        var npt = flippedYCoord(event.locationInWindow)
+        npt.x -= pt.x
+        npt.y -= pt.y
+        
+        updateRotationSpeedAndDirection(npt)
+    }
+    
+    func fClamp(_ v:Float, _ range:float2) -> Float {
+        if v < range.x { return range.x }
+        if v > range.y { return range.y }
+        return v
+    }
+    
+    override func scrollWheel(with event: NSEvent) {
+        camera.z += event.deltaY < 0 ? 5 : -5
+        camera.z = fClamp(camera.z, float2(-300,-10))
+    }
+
+    //MARK: -
+    
+    func updateRotationSpeedAndDirection(_ pt:NSPoint) {
+        let scale:Float = 0.01
+        let rRange = float2(-3,3)
+        
+        paceRotate.x =  CGFloat(fClamp(Float(pt.x) * scale, rRange))
+        paceRotate.y = -CGFloat(fClamp(Float(pt.y) * scale, rRange))
+    }
+    
+    //MARK: -
+
+    func changeIsoValue(_ amt:Float) {
+        control.isoValue += amt
+        if control.isoValue < 0.01 { control.isoValue = 0.01 } else if control.isoValue > 1 { control.isoValue = 1 }
+        //   Swift.print("Iso ",isoValue)
     }
 }
