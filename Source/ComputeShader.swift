@@ -13,35 +13,40 @@ class ComputeShader {
     var numThreadgroups = MTLSize()
     var commandQueue:MTLCommandQueue! = nil
 
-    func buildPipeline(_ shaderFunction:String) -> MTLComputePipelineState {
-        var result:MTLComputePipelineState!
-        
-        do {
-            let defaultLibrary = device?.makeDefaultLibrary()
-            let prg = defaultLibrary?.makeFunction(name:shaderFunction)
-            result = try device?.makeComputePipelineState(function: prg!)
-        } catch { fatalError("Failed to setup " + shaderFunction) }
-        
-        return result
-    }
-
     //MARK: -
     // =====================================================================================
-    var pipe1:MTLComputePipelineState! = nil
-    var pipe2:MTLComputePipelineState! = nil
-    var pipe3:MTLComputePipelineState! = nil
-    var pipe4:MTLComputePipelineState! = nil
-    var pipe5:MTLComputePipelineState! = nil
+    var pipeline:[MTLComputePipelineState] = []
     var vCountBuffer:MTLBuffer! = nil
 
+    let PIPELINE_UPDATECUBES = 0
+    let PIPELINE_GRID_POWER  = 1
+    let PIPELINE_GRID_POWER2 = 2
+    let PIPELINE_GRID_POWER3 = 3
+    let PIPELINE_BALL_MOVE   = 4
+    let shaderNames = [
+        "updateMarchingCubes",
+        "calcGridPower",
+        "calcGridPower2",
+        "calcGridPower3",
+        "calcBallMovement" ]
+
     func updateMarchingCubes(_ grid:inout [TVertex], _ base:float3, _ rot:float2) {
-        if pipe1 == nil {
+        if pipeline.count == 0 {
+            let defaultLibrary = device?.makeDefaultLibrary()
+
+            func buildPipeline(_ shaderFunction:String) -> MTLComputePipelineState {
+                var result:MTLComputePipelineState!
+                
+                do {
+                    let prg = defaultLibrary?.makeFunction(name:shaderFunction)
+                    result = try device?.makeComputePipelineState(function: prg!)
+                } catch { fatalError("Failed to setup " + shaderFunction) }
+                
+                return result
+            }
+            
             commandQueue = device.makeCommandQueue()
-            pipe1 = buildPipeline("updateMarchingCubes")
-            pipe2 = buildPipeline("calcGridPower")
-            pipe3 = buildPipeline("calcGridPower2")
-            pipe4 = buildPipeline("calcGridPower3")
-            pipe5 = buildPipeline("calcBallMovement")
+            for i in 0 ..< shaderNames.count { pipeline.append(buildPipeline(shaderNames[i])) }
 
             vCountBuffer = device?.makeBuffer(length:MemoryLayout<Counter>.stride, options:.storageModeShared)
         }
@@ -51,15 +56,15 @@ class ComputeShader {
         let cBuffer = device?.makeBuffer(bytes: &control, length: cLength, options: [])
         let gBuffer = device?.makeBuffer(bytes: grid, length: gLength, options: [])
         
-        let w = pipe1.threadExecutionWidth
-        let h = pipe1.maxTotalThreadsPerThreadgroup / w
+        let w = pipeline[PIPELINE_UPDATECUBES].threadExecutionWidth
+        let h = pipeline[PIPELINE_UPDATECUBES].maxTotalThreadsPerThreadgroup / w
         let tg = Int(GSPAN+1)
         threadsPerGroup = MTLSize(width:w,height:h,depth:1)
         numThreadgroups = MTLSize(width:tg, height:tg, depth:tg)
         
         let commandBuffer = commandQueue.makeCommandBuffer()!
         let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-        commandEncoder.setComputePipelineState(pipe1)
+        commandEncoder.setComputePipelineState(pipeline[PIPELINE_UPDATECUBES])
         commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
         commandEncoder.setBuffer(cBuffer, offset: 0, index: 1)
         commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
@@ -72,7 +77,7 @@ class ComputeShader {
 
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipe2)
+            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER])
             commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
             commandEncoder.setBuffer(bBuffer, offset: 0, index: 1)
             commandEncoder.setBuffer(cBuffer, offset: 0, index: 2)
@@ -85,7 +90,7 @@ class ComputeShader {
         if true {
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipe3)
+            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER2])
             commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
             commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup:threadsPerGroup)
             commandEncoder.endEncoding()
@@ -101,7 +106,7 @@ class ComputeShader {
             
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipe4)
+            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER3])
             commandEncoder.setBuffer(gBuffer,     offset: 0, index: 0)
             commandEncoder.setBuffer(vBuffer,     offset: 0, index: 1)
             commandEncoder.setBuffer(vCountBuffer,offset: 0, index: 2)
@@ -131,7 +136,7 @@ class ComputeShader {
         let threadsPerGroup = MTLSize(width:16,height:1,depth:1)
         let numThreadgroups = MTLSize(width:32, height:1, depth:1)
         
-        commandEncoder.setComputePipelineState(pipe5!)
+        commandEncoder.setComputePipelineState(pipeline[PIPELINE_BALL_MOVE])
         commandEncoder.setBuffer(bBuffer, offset: 0, index: 0)
         commandEncoder.setBuffer(cBuffer, offset: 0, index: 1)
         commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)

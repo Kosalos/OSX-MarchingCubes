@@ -14,18 +14,12 @@ typedef struct {
 typedef struct {
     vector_float3 pos;
     float power;
-    
-    int unused1;
-    int unused2;
-    int unused3;
 } BallData;
 
 typedef struct {
     float isoValue;
     float movement;
     float movement2;
-    int index;
-    int lookup;
     int drawStyle;
 
     vector_float3 base; // for updateMarchingCubes shader

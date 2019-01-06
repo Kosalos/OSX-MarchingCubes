@@ -76,9 +76,9 @@
                             <textField verticalHuggingPriority="750" id="siq-sY-Ld6">
                                 <rect key="frame" x="249" y="108" width="137" height="54"/>
                                 <autoresizingMask key="autoresizingMask"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" allowsUndo="NO" sendsActionOnEndEditing="YES" drawsBackground="YES" id="Pfp-Pq-O9Y">
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" allowsUndo="NO" sendsActionOnEndEditing="YES" id="Pfp-Pq-O9Y">
                                     <font key="font" usesAppearanceFont="YES"/>
-                                    <color key="textColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="textColor" name="selectedMenuItemTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlDarkShadowColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>

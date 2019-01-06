@@ -1,3 +1,6 @@
+// visit: http://paulbourke.net/geometry/polygonise/
+// visit: http://www.cs.carleton.edu/cs_comps/0405/shape/marching_cubes.html
+
 #include <metal_stdlib>
 #include "Shared.h"
 
@@ -52,7 +55,7 @@ fragment float4 texturedFragmentShader
 kernel void calcBallMovement
 (
  device BallData *ballData [[ buffer(0) ]],
- const device Control *cd  [[ buffer(1) ]],
+ const device Control &cd  [[ buffer(1) ]],
  uint id [[ thread_position_in_grid ]]
  )
 {
@@ -61,9 +64,9 @@ kernel void calcBallMovement
     float fi = float(id);
     float f1 = float(id+3);
     
-    ballData[id].pos.x = cos(cd->movement  * (fi + 1)  ) * 1.9 * f1/2;
-    ballData[id].pos.y = sin(cd->movement  * (fi + 1.2)) * 2.1 * f1/2;
-    ballData[id].pos.z = cos(cd->movement2 * (fi + 1.5)) * 2.4 * f1/3;
+    ballData[id].pos.x = cos(cd.movement  * (fi + 1)  ) * 1.9 * f1/2;
+    ballData[id].pos.y = sin(cd.movement  * (fi + 1.2)) * 2.1 * f1/2;
+    ballData[id].pos.z = cos(cd.movement2 * (fi + 1.5)) * 2.4 * f1/3;
 }
 
 //MARK: -
@@ -114,7 +117,7 @@ kernel void calcGridPower
 (
  device TVertex *grid            [[ buffer(0) ]],
  const device BallData *ballData [[ buffer(1) ]],
- const device Control &cd   [[ buffer(2) ]],
+ const device Control &cd        [[ buffer(2) ]],
  uint3 id [[ thread_position_in_grid ]]
  )
 {
@@ -185,7 +188,7 @@ kernel void calcGridPower3
  constant TVertex *grid         [[ buffer(0) ]],
  device TVertex *vertices       [[ buffer(1) ]],
  device atomic_uint &vcounter   [[ buffer(2) ]],
- const device Control &cd  [[ buffer(3) ]],
+ const device Control &cd       [[ buffer(3) ]],
  uint3 id [[ thread_position_in_grid ]]
  )
 {
@@ -245,12 +248,9 @@ kernel void calcGridPower3
         }
         else {      // triangle
             float den = 20;
-            v1.texColor.x = v1.pos.x / den;
-            v1.texColor.y = v1.pos.y / den;
-            v2.texColor.x = v2.pos.x / den;
-            v2.texColor.y = v2.pos.y / den;
-            v3.texColor.x = v3.pos.x / den;
-            v3.texColor.y = v3.pos.y / den;
+            v1.texColor.xy = v1.pos.xy / den;
+            v2.texColor.xy = v2.pos.xy / den;
+            v3.texColor.xy = v3.pos.xy / den;
 
             int index = atomic_fetch_add_explicit(&vcounter, 3, memory_order_relaxed);
             vertices[index++] = v1;
