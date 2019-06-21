@@ -59,7 +59,7 @@ class ComputeShader {
         let w = pipeline[PIPELINE_UPDATECUBES].threadExecutionWidth
         let h = pipeline[PIPELINE_UPDATECUBES].maxTotalThreadsPerThreadgroup / w
         let tg = Int(GSPAN+1)
-        threadsPerGroup = MTLSize(width:w,height:h,depth:1)
+        threadsPerGroup = MTLSize(width:w/2,height:h,depth:1)
         numThreadgroups = MTLSize(width:tg, height:tg, depth:tg)
         
         let commandBuffer = commandQueue.makeCommandBuffer()!
