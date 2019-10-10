@@ -108,7 +108,7 @@ class ArcBall {
     func mouseMove(_ cgPt:CGPoint) {
         endVertex = mapToSphere(cgPt)
 
-        var Perp = vector3fCross(startVertex,endVertex)
+        let Perp = vector3fCross(startVertex,endVertex)
         
         var newRot = float4()
         
