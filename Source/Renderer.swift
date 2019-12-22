@@ -63,7 +63,7 @@ class Renderer: NSObject, MTKViewDelegate {
         sampler.normalizedCoordinates = true
         samplerState = device.makeSamplerState(descriptor: sampler)
         
-        do { texture = try Renderer.loadTexture(device: device, textureName: "p10")
+        do { texture = try Renderer.loadTexture(device: device, textureName: "face")
         } catch { print("Unable to load texture. Error info: \(error)");  exit(0)  }
         
         let depthStateDesciptor = MTLDepthStencilDescriptor()

@@ -14,70 +14,77 @@ class ComputeShader {
     var commandQueue:MTLCommandQueue! = nil
 
     //MARK: -
-    // =====================================================================================
     var pipeline:[MTLComputePipelineState] = []
     var vCountBuffer:MTLBuffer! = nil
+    var iCountBuffer:MTLBuffer! = nil
 
-    let PIPELINE_UPDATECUBES = 0
-    let PIPELINE_GRID_POWER  = 1
-    let PIPELINE_GRID_POWER2 = 2
-    let PIPELINE_GRID_POWER3 = 3
-    let PIPELINE_BALL_MOVE   = 4
+    let PIPELINE_UPDATE_GRID = 0
+    let PIPELINE_GRID_FLUX = 1
+    let PIPELINE_UPDATE_VERTICES = 2
+    let PIPELINE_BALL_MOVE = 3
     let shaderNames = [
-        "updateMarchingCubes",
-        "calcGridPower",
-        "calcGridPower2",
-        "calcGridPower3",
+        "determineGridPositions",
+        "determineGridFlux",
+        "determineVertices",
         "calcBallMovement" ]
+    
+    //MARK: initialize ========================
+    func initialize() {
+        let defaultLibrary = device?.makeDefaultLibrary()
 
-    func updateMarchingCubes(_ grid:inout [TVertex], _ base:float3, _ rot:float2) {
-        if pipeline.count == 0 {
-            let defaultLibrary = device?.makeDefaultLibrary()
-
-            func buildPipeline(_ shaderFunction:String) -> MTLComputePipelineState {
-                var result:MTLComputePipelineState!
-                
-                do {
-                    let prg = defaultLibrary?.makeFunction(name:shaderFunction)
-                    result = try device?.makeComputePipelineState(function: prg!)
-                } catch { fatalError("Failed to setup " + shaderFunction) }
-                
-                return result
-            }
+        func buildPipeline(_ shaderFunction:String) -> MTLComputePipelineState {
+            var result:MTLComputePipelineState!
             
-            commandQueue = device.makeCommandQueue()
-            for i in 0 ..< shaderNames.count { pipeline.append(buildPipeline(shaderNames[i])) }
-
-            vCountBuffer = device?.makeBuffer(length:MemoryLayout<Counter>.stride, options:.storageModeShared)
+            do {
+                let prg = defaultLibrary?.makeFunction(name:shaderFunction)
+                result = try device?.makeComputePipelineState(function: prg!)
+            } catch { fatalError("Failed to setup " + shaderFunction) }
+            
+            return result
         }
         
+        commandQueue = device.makeCommandQueue()
+        for i in 0 ..< shaderNames.count { pipeline.append(buildPipeline(shaderNames[i])) }
+
+        vCountBuffer = device?.makeBuffer(length:MemoryLayout<Counter>.stride, options:.storageModeShared)
+        iCountBuffer = device?.makeBuffer(length:MemoryLayout<Counter>.stride, options:.storageModeShared)
+
+        //----------------------
+        let w = pipeline[PIPELINE_UPDATE_GRID].threadExecutionWidth
+        let h = pipeline[PIPELINE_UPDATE_GRID].maxTotalThreadsPerThreadgroup / w
+        let tg = Int(GSPAN+1)
+        threadsPerGroup = MTLSize(width:w / 2,height:h,depth:1)
+        numThreadgroups = MTLSize(width:tg, height:tg, depth:tg)
+    }
+
+    //MARK: update ========================
+
+    func update(_ grid:inout [TVertex], _ base:float3, _ rot:float2) {
         control.base = base
         control.rot = rot
         let cBuffer = device?.makeBuffer(bytes: &control, length: cLength, options: [])
+
         let gBuffer = device?.makeBuffer(bytes: grid, length: gLength, options: [])
-        
-        let w = pipeline[PIPELINE_UPDATECUBES].threadExecutionWidth
-        let h = pipeline[PIPELINE_UPDATECUBES].maxTotalThreadsPerThreadgroup / w
-        let tg = Int(GSPAN+1)
-        threadsPerGroup = MTLSize(width:w/2,height:h,depth:1)
-        numThreadgroups = MTLSize(width:tg, height:tg, depth:tg)
         
         let commandBuffer = commandQueue.makeCommandBuffer()!
         let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-        commandEncoder.setComputePipelineState(pipeline[PIPELINE_UPDATECUBES])
+        commandEncoder.setComputePipelineState(pipeline[PIPELINE_UPDATE_GRID])
         commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
         commandEncoder.setBuffer(cBuffer, offset: 0, index: 1)
         commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
         commandEncoder.endEncoding()
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        
-        if true {
-            let bBuffer = device?.makeBuffer(bytes: &ballData, length: bLength, options: [])
 
+        let data = NSData(bytesNoCopy: gBuffer!.contents(), length: gLength, freeWhenDone: false)
+        data.getBytes(&grid, length:gLength)
+
+        let bBuffer = device?.makeBuffer(bytes: &ballData, length: bLength, options: [])
+
+        if true {
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER])
+            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_FLUX])
             commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
             commandEncoder.setBuffer(bBuffer, offset: 0, index: 1)
             commandEncoder.setBuffer(cBuffer, offset: 0, index: 2)
@@ -88,37 +95,32 @@ class ComputeShader {
         }
         
         if true {
-            let commandBuffer = commandQueue.makeCommandBuffer()!
-            let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER2])
-            commandEncoder.setBuffer(gBuffer, offset: 0, index: 0)
-            commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup:threadsPerGroup)
-            commandEncoder.endEncoding()
-            commandBuffer.commit()
-            commandBuffer.waitUntilCompleted()
-            
-            let data = NSData(bytesNoCopy: gBuffer!.contents(), length: gLength, freeWhenDone: false)
-            data.getBytes(&grid, length:gLength)
-        }
-        
-        if true {
             memset(vCountBuffer.contents(),0,MemoryLayout<Counter>.stride)
-            
+            memset(iCountBuffer.contents(),0,MemoryLayout<Counter>.stride)
+
             let commandBuffer = commandQueue.makeCommandBuffer()!
             let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-            commandEncoder.setComputePipelineState(pipeline[PIPELINE_GRID_POWER3])
+            commandEncoder.setComputePipelineState(pipeline[PIPELINE_UPDATE_VERTICES])
             commandEncoder.setBuffer(gBuffer,     offset: 0, index: 0)
-            commandEncoder.setBuffer(vBuffer,     offset: 0, index: 1)
-            commandEncoder.setBuffer(vCountBuffer,offset: 0, index: 2)
-            commandEncoder.setBuffer(cBuffer,     offset: 0, index: 3)
+            commandEncoder.setBuffer(bBuffer,     offset: 0, index: 1)
+            commandEncoder.setBuffer(cBuffer,     offset: 0, index: 2)
+            commandEncoder.setBuffer(vBuffer,     offset: 0, index: 3)
+            commandEncoder.setBuffer(vCountBuffer,offset: 0, index: 4)
+            commandEncoder.setBuffer(iBuffer,     offset: 0, index: 5)
+            commandEncoder.setBuffer(iCountBuffer,offset: 0, index: 6)
             commandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup:threadsPerGroup)
             commandEncoder.endEncoding()
             commandBuffer.commit()
             commandBuffer.waitUntilCompleted()
             
             var result = Counter()
-            memcpy(&result,vCountBuffer.contents(),MemoryLayout<Counter>.stride)
-            vCount = Int(result.count)
+            memcpy(&result,iCountBuffer.contents(),MemoryLayout<Counter>.stride)
+            iCount = Int(result.count)
+            
+            if iCount >= GTMAX {
+                print("overflowed index storage")
+                exit(-1)
+            }
         }
     }
     

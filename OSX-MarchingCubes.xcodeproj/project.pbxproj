@@ -200,6 +200,9 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_INDEX_STORE = NO;
+				MTL_FAST_MATH = YES;
+				MTL_LANGUAGE_REVISION = Metal20;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Harry.OSX-MarchingCubes";
 				PRODUCT_NAME = "OSX-MarchingCubes";
 				SDKROOT = macosx;
@@ -224,6 +227,9 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_INDEX_STORE = NO;
+				MTL_FAST_MATH = YES;
+				MTL_LANGUAGE_REVISION = Metal20;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Harry.OSX-MarchingCubes";
 				PRODUCT_NAME = "OSX-MarchingCubes";
 				SDKROOT = macosx;

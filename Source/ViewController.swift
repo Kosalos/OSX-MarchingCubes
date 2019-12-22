@@ -51,7 +51,9 @@ class ViewController: NSViewController, NSWindowDelegate {
         
         layoutViews()
         
-        Timer.scheduledTimer(withTimeInterval:0.01, repeats:true) { timer in self.paceTimerHandler() }
+        computeShader.initialize()
+        
+        Timer.scheduledTimer(withTimeInterval:0.05, repeats:true) { timer in self.paceTimerHandler() }
     }
 
     @IBAction func stereoPressed(_ sender: NSButton) {
@@ -114,9 +116,15 @@ class ViewController: NSViewController, NSWindowDelegate {
     
     //MARK: -
     
+    var isBusy:Bool = false
+    
     @objc func paceTimerHandler() {
-        world.update(self)
-        rotate(paceRotate)
+        if(!isBusy) {
+            isBusy = true
+            rotate(paceRotate)
+            world.update(self)
+            isBusy = false
+        }
         
         if dvrCount > 0 {
             dvrCount -= 1
@@ -177,7 +185,7 @@ class ViewController: NSViewController, NSWindowDelegate {
     //MARK: -
     
     func updateRotationSpeedAndDirection(_ pt:NSPoint) {
-        let scale:Float = 0.01
+        let scale:Float = 0.03
         let rRange = float2(-3,3)
         
         paceRotate.x =  CGFloat(fClamp(Float(pt.x) * scale, rRange))
@@ -185,10 +193,12 @@ class ViewController: NSViewController, NSWindowDelegate {
     }
     
     //MARK: -
+    let minIsoValue:Float = 0.001
+    let maxIsoValue:Float = 2.0
 
     func changeIsoValue(_ amt:Float) {
         control.isoValue += amt
-        if control.isoValue < 0.01 { control.isoValue = 0.01 } else if control.isoValue > 1 { control.isoValue = 1 }
-        //   Swift.print("Iso ",isoValue)
+        if control.isoValue < minIsoValue { control.isoValue = minIsoValue } else if control.isoValue > maxIsoValue { control.isoValue = maxIsoValue }
+        //Swift.print("Iso ",control.isoValue)
     }
 }

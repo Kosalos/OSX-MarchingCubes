@@ -6,6 +6,11 @@
 
 using namespace metal;
 
+//MARK: -
+//----------------------------------------------------------------
+// Vertex shader for render
+//----------------------------------------------------------------
+
 struct Transfer {
     float4 position [[position]];
     float pointsize [[point_size]];
@@ -32,6 +37,11 @@ vertex Transfer texturedVertexShader
     
     return out;
 }
+
+//MARK: -
+//----------------------------------------------------------------
+// Fragment shader for render
+//----------------------------------------------------------------
 
 fragment float4 texturedFragmentShader
 (
@@ -61,8 +71,8 @@ kernel void calcBallMovement
 {
     if(id >= BCOUNT) return; // size not evenly divisible by threads
     
-    float fi = float(id);
-    float f1 = float(id+3);
+    float fi = float(id) * 1.5;
+    float f1 = float(id+3) * 1.5;
     
     ballData[id].pos.x = cos(cd.movement  * (fi + 1)  ) * 1.9 * f1/2;
     ballData[id].pos.y = sin(cd.movement  * (fi + 1.2)) * 2.1 * f1/2;
@@ -76,9 +86,8 @@ kernel void calcBallMovement
 
 constant int GSPAN2 = GSPAN * GSPAN;    //   Z axis offset
 constant int GSPAN3 = GSPAN + GSPAN2;   // Y+Z axis offset
-constant int GTOTAL = GSPAN * GSPAN * GSPAN;
 
-kernel void updateMarchingCubes
+kernel void determineGridPositions
 (
  device TVertex *grid      [[ buffer(0) ]],
  const device Control &cd  [[ buffer(1) ]],
@@ -113,7 +122,7 @@ kernel void updateMarchingCubes
 // update grid[] flux and 'inside' fields according to current ball positions & isovalue
 //----------------------------------------------------------------
 
-kernel void calcGridPower
+kernel void determineGridFlux
 (
  device TVertex *grid            [[ buffer(0) ]],
  const device BallData *ballData [[ buffer(1) ]],
@@ -125,13 +134,13 @@ kernel void calcGridPower
     if(id.y >= GSPAN-1) return; // also don't want to use last row/columns of grid
     if(id.z >= GSPAN-1) return;
     int index = id.x + id.y * GSPAN + id.z * GSPAN * GSPAN;
-
+    
     grid[index].flux = 0;
     float3 bpos = grid[index].pos;
     
     for(int i=0;i<BCOUNT;++i) {
         float dd = 1 + length_squared(ballData[i].pos - bpos);
-        grid[index].flux += ballData[i].power * ballData[i].power / dd;
+        grid[index].flux += ballData[i].power * ballData[i].power / (dd * dd);
     }
     
     grid[index].inside = grid[index].flux > cd.isoValue ? 1 : 0;
@@ -139,34 +148,8 @@ kernel void calcGridPower
 
 //MARK: -
 //----------------------------------------------------------------
-// update grid[] normals
+// given two grid nodes, determine vertex where isovalue intercepts edge between them
 //----------------------------------------------------------------
-
-kernel void calcGridPower2
-(
- device TVertex *grid [[ buffer(0) ]],
- uint3 id [[ thread_position_in_grid ]]
- )
-{
-    if(id.x >= GSPAN-1) return; // size not evenly divisible by threads
-    if(id.y >= GSPAN-1) return; // also don't want to use last row/columns of grid
-    if(id.z >= GSPAN-1) return;
-    int index = id.x + id.y * GSPAN + id.z * GSPAN * GSPAN;
-
-    grid[index].nrm.x = (index == 0 || index == GTOTAL-1) ? 0 : grid[index - 1].flux - grid[index + 1].flux;
-    grid[index].nrm.y = (index < GSPAN || index > GTOTAL-GSPAN) ? 0 : grid[index - GSPAN].flux - grid[index + GSPAN].flux;
-    grid[index].nrm.z = (index < GSPAN2 || index > GTOTAL-GSPAN2) ? 0 : grid[index - GSPAN2].flux - grid[index + GSPAN2].flux;
-    
-    grid[index].nrm = normalize(grid[index].nrm);
-}
-
-//MARK: -
-//----------------------------------------------------------------
-// generate vertices according to grid flux values
-//----------------------------------------------------------------
-
-extern constant int eTable[];
-extern constant uchar tTable[][16];
 
 TVertex interpolate(TVertex v1, TVertex v2, float isoValue) {
     float diff = v2.flux - v1.flux;
@@ -176,19 +159,75 @@ TVertex interpolate(TVertex v1, TVertex v2, float isoValue) {
     
     TVertex v;
     v.pos = v1.pos + (v2.pos - v1.pos) * diff;
-    v.nrm = v1.nrm + (v2.nrm - v1.nrm) * diff * 3;
     v.flux = v1.flux + (v2.flux - v1.flux) * diff;
     return v;
 }
 
 //MARK: -
+//----------------------------------------------------------------
+// normal = weighted distance from position to all metaballs
+//----------------------------------------------------------------
 
-kernel void calcGridPower3
+float3 calcNormal(float3 pos, constant BallData *ballData) {
+    float3 nt = float3();
+    
+    for(int b=0;b<BCOUNT;++b) {
+        float3 d = pos - ballData[b].pos;
+        float dist = d.x * d.x + d.y * d.y + d.z * d.z;
+        nt += d / (dist * dist);
+    }
+    
+    return normalize(nt);
+}
+
+//MARK: -
+//----------------------------------------------------------------
+// texture coordinates based on normal vector
+//----------------------------------------------------------------
+
+float4 calcUVCoords(float3 nrm) {
+    float4 ans = float4(0,0,0,0);
+    ans.x = nrm.x / 2.0 + 0.5;
+    ans.y = nrm.y / 2.0 + 0.5;
+    return ans;
+}
+
+//MARK: -
+//----------------------------------------------------------------
+// scan all existing vertices for one that matches specified position
+// return -1 if none is found
+//----------------------------------------------------------------
+
+int indexOfExistingVertex(float3 pos, device TVertex *vertices, int vCount) {
+#define CONSIDERSAME 0.0000001
+    
+    for(int i=0; i < vCount; ++i) {
+        if(abs(pos.x - vertices[i].pos.x) > CONSIDERSAME) continue;
+        if(abs(pos.y - vertices[i].pos.y) > CONSIDERSAME) continue;
+        if(abs(pos.z - vertices[i].pos.z) > CONSIDERSAME) continue;
+        return i;
+    }
+    
+    return -1;  // 'not in list'
+}
+
+//MARK: -
+//----------------------------------------------------------------
+// determine metaball vertices
+//----------------------------------------------------------------
+
+extern constant int eTable[];
+extern constant uchar tTable[][16];
+
+kernel void determineVertices
 (
- constant TVertex *grid         [[ buffer(0) ]],
- device TVertex *vertices       [[ buffer(1) ]],
- device atomic_uint &vcounter   [[ buffer(2) ]],
- const device Control &cd       [[ buffer(3) ]],
+ constant TVertex *grid         [[ buffer(0) ]],    // grid nodes holding flux values
+ constant BallData *ballData    [[ buffer(1) ]],    // positions of seed metaball positions
+ const device Control &cd       [[ buffer(2) ]],    // global control parameters
+ device TVertex *vertices       [[ buffer(3) ]],    // output: where to store vertices
+ device atomic_uint &vcounter   [[ buffer(4) ]],    // output: where to store vertex count
+ device ushort *indices         [[ buffer(5) ]],    // output: where to store indices
+ device atomic_uint &icounter   [[ buffer(6) ]],    // output: where to store index count
  uint3 id [[ thread_position_in_grid ]]
  )
 {
@@ -232,33 +271,68 @@ kernel void calcGridPower3
         TVertex v2 = verts[int(tTable[lookup][i+1])];
         TVertex v3 = verts[int(tTable[lookup][i+2])];
         i += 3;
-
-        if(cd.drawStyle == 0) {     // line
-            v1.texColor = float4(1);
-            v2.texColor = float4(1);
-            v3.texColor = float4(1);
-
-            int index = atomic_fetch_add_explicit(&vcounter, 6, memory_order_relaxed);
-            vertices[index++] = v1;
-            vertices[index++] = v2;
-            vertices[index++] = v1;
-            vertices[index++] = v3;
-            vertices[index++] = v2;
-            vertices[index++] = v3;
+        
+        int vCount = atomic_fetch_add_explicit(&vcounter, 0, memory_order_relaxed); // #existing vertices
+        int vIndex1 = indexOfExistingVertex(v1.pos,vertices,vCount);  // < 0  == not in list
+        int vIndex2 = indexOfExistingVertex(v2.pos,vertices,vCount);
+        int vIndex3 = indexOfExistingVertex(v3.pos,vertices,vCount);
+        
+        // not already in vertex list?
+        if(vIndex1 < 0) {
+            if(cd.drawStyle == 0)       // line
+                v1.texColor = float4(1);
+            else {                      // triangle
+                v1.nrm = calcNormal(v1.pos,ballData);
+                v1.texColor = calcUVCoords(v1.nrm);
+            }
+            
+            vIndex1 = atomic_fetch_add_explicit(&vcounter, 1, memory_order_relaxed);
+            vertices[vIndex1] = v1;
         }
-        else {      // triangle
-            float den = 20;
-            v1.texColor.xy = v1.pos.xy / den;
-            v2.texColor.xy = v2.pos.xy / den;
-            v3.texColor.xy = v3.pos.xy / den;
-
-            int index = atomic_fetch_add_explicit(&vcounter, 3, memory_order_relaxed);
-            vertices[index++] = v1;
-            vertices[index++] = v2;
-            vertices[index++] = v3;
+        if(vIndex2 < 0) {
+            if(cd.drawStyle == 0)       // line
+                v2.texColor = float4(1);
+            else {                      // triangle
+                v2.nrm = calcNormal(v2.pos,ballData);
+                v2.texColor = calcUVCoords(v2.nrm);
+            }
+            
+            vIndex2 = atomic_fetch_add_explicit(&vcounter, 1, memory_order_relaxed);
+            vertices[vIndex2] = v2;
+        }
+        if(vIndex3 < 0) {
+            if(cd.drawStyle == 0)       // line
+                v3.texColor = float4(1);
+            else {                      // triangle
+                v3.nrm = calcNormal(v3.pos,ballData);
+                v3.texColor = calcUVCoords(v3.nrm);
+            }
+            
+            vIndex3 = atomic_fetch_add_explicit(&vcounter, 1, memory_order_relaxed);
+            vertices[vIndex3] = v3;
+        }
+        
+        // update index[] list to point at newly defined triangle or line
+        
+        if(cd.drawStyle == 0) {     // line
+            int index = atomic_fetch_add_explicit(&icounter, 6, memory_order_relaxed);
+            indices[index++] = vIndex1;
+            indices[index++] = vIndex2;
+            indices[index++] = vIndex1;
+            indices[index++] = vIndex3;
+            indices[index++] = vIndex2;
+            indices[index++] = vIndex3;
+        }
+        else {  // triangle
+            int index = atomic_fetch_add_explicit(&icounter, 3, memory_order_relaxed);
+            indices[index++] = vIndex1;
+            indices[index++] = vIndex2;
+            indices[index++] = vIndex3;
         }
     }
 }
+
+//MARK: -
 
 constant int eTable[] = {
     0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,

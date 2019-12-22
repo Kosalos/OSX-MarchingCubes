@@ -3,11 +3,10 @@
 #include <simd/simd.h>
 
 typedef struct {
-	vector_float3 pos;
-	vector_float3 nrm;
-	vector_float4 texColor;    // alpha = 0 == texture coord,  else color
-	
-	float flux;
+	vector_float3 pos;          // position
+	vector_float3 nrm;          // normal vector
+	vector_float4 texColor;     // tringle texture coord,  else line color
+	float flux;                 
 	unsigned char inside;
 } TVertex;
 
@@ -22,7 +21,7 @@ typedef struct {
     float movement2;
     int drawStyle;
 
-    vector_float3 base; // for updateMarchingCubes shader
+    vector_float3 base; // for determineGridPositions shader
     vector_float2 rot;
 } Control;
 
@@ -37,5 +36,5 @@ typedef struct {
 } Counter;
 
 #define BCOUNT 12 // #flux points
-#define GSPAN  30 // #marching cubes x,y,z
+#define GSPAN  50 // #marching cubes x,y,z
 

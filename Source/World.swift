@@ -14,23 +14,23 @@ class World {
     let bLength = iBCOUNT * MemoryLayout<TVertex>.stride
 
     init() {
-        for _ in 0 ..< iBCOUNT {
+        for i in 0 ..< iBCOUNT {
             var pt = BallData()
             pt.pos = float3()
-            pt.power = 0.5
+            pt.power = 0.3 + Float(i) * 0.15
             
             ballData.append(pt)
             ballPoints.append(TVertex())
         }
         
-        cube = Cube.init(float3(Float(10),Float(10),Float(-5)))
+        cube = Cube.init(float3(0,0,-5))
         
-        control.isoValue = 0.02
+        control.isoValue = 0.003
         control.drawStyle = Int32(0)
     }
     
     //MARK: -
-    var QQQ:Float = 0.04 // speed
+    var QQQ:Float = 0.2 // speed
     
     func update(_ controller: ViewController) {
         control.movement += 0.01 * QQQ      // move flux points
