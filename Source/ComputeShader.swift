@@ -50,10 +50,17 @@ class ComputeShader {
         iCountBuffer = device?.makeBuffer(length:MemoryLayout<Counter>.stride, options:.storageModeShared)
 
         //----------------------
-        let w = pipeline[PIPELINE_UPDATE_GRID].threadExecutionWidth
-        let h = pipeline[PIPELINE_UPDATE_GRID].maxTotalThreadsPerThreadgroup / w
+        var w = pipeline[PIPELINE_UPDATE_GRID].threadExecutionWidth
+        var h = pipeline[PIPELINE_UPDATE_GRID].maxTotalThreadsPerThreadgroup / w
         let tg = Int(GSPAN+1)
-        threadsPerGroup = MTLSize(width:w / 2,height:h,depth:1)
+        
+        ////////////////////////////////////
+        let kernelthreadgroupsizelimit = 768     // adjust this for your hardware
+        if w * h > kernelthreadgroupsizelimit { w /= 2 }
+        if w * h > kernelthreadgroupsizelimit { h /= 2 }
+        ////////////////////////////////////
+
+        threadsPerGroup = MTLSize(width:w,height:h,depth:1)
         numThreadgroups = MTLSize(width:tg, height:tg, depth:tg)
     }
 
